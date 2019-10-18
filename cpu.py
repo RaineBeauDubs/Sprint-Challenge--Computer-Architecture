@@ -12,6 +12,7 @@ MUL = 0b10100010
 ADD = 0b10100000
 CALL = 0b01010000
 RET = 0b00010001
+# added new codes for SC
 CMP = 0b10100111
 JMP = 0b01010100
 JEQ = 0b01010101
@@ -24,6 +25,7 @@ class CPU:
         """Construct a new CPU."""
         self.ram = [0] * 256
         self.reg = [0] * 8
+        # added a flag register (?) 
         self.fl = [0] * 8
         self.pc = 0
         self.SP = 0x07
@@ -38,6 +40,7 @@ class CPU:
             ADD: self.ADD,
             CALL: self.CALL,
             RET: self.RET,
+            # added new variables for SC
             CMP: self.CMP,
             JMP: self.JMP,
             JEQ: self.JEQ,
@@ -79,19 +82,33 @@ class CPU:
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
         elif op == "CMP":
+            # set all of my flags here
             self.fl[0] = 0 # G flag
             self.fl[1] = 0 # L flag
             self.fl[2] = 0 # E flag
             if self.reg[reg_a] > self.reg[reg_b]:
+                # if the first given value is greater than the second, we set the greater-than flag to true
                 self.fl[0] = 1
             elif self.reg[reg_a] < self.reg[reg_b]:
+                # if the first given value is less than the second, we set the less-than flag to true
                 self.fl[1] = 1
             else:
+                # if the first given value is equal to than the second, we set the equal-to flag to true
                 self.fl[2] = 1
         elif op == "JEQ":
-            pass
+            if self.fl[2] == 1:
+                # if E flag is set to true, jump to given address
+                self.JMP(reg_a, reg_b)
+            else:
+                # if not, increment program counter
+                self.pc += 2
         elif op == "JNE":
-            pass
+            if self.fl[2] == 0:
+                # if E flag is set to false, jump to given address
+                self.JMP(reg_a, reg_b)
+            else:
+                # if not, increment program counter
+                self.pc += 2
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -149,12 +166,15 @@ class CPU:
     def CMP(self, operand_a, operand_b):
         self.alu("CMP", operand_a, operand_b)
         self.pc += 3
+    # JUMP:
     def JMP(self, operand_a, operand_b):
-        pass
+        self.pc = self.reg[operand_a]
+    # JUMP TO EQUAL:
     def JEQ(self, operand_a, operand_b):
-        pass
+        self.alu("JEQ", operand_a, operand_b)
+    # JUMP TO NOT EQUAL:
     def JNE(self, operand_a, operand_b):
-        pass
+        self.alu("JNE", operand_a, operand_b)
 
 
 
